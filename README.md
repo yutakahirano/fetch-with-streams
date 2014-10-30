@@ -27,12 +27,14 @@ To extract a byte stream and a 'Content-Type' value from a BodyStreamInit object
 2. Set *Content-Type* to object's _contentType_ attribute.
 
 ```
-[NoInterfaceObject] interface Body : ReadableByteStream {
+[NoInterfaceObject] interface Body {
+    ReadableByteStream body();
     ...
 };
 ```
 Objects implementing the Body mixin gain an associated __body__ (a pair of readable and writable byte streams) and a __MIME type__ (initially the empty byte sequence). Objects implments the Body mixin expose methods and attributes of the __read end__ of the body.
 The __bodyUsed__ attribute's getter must return if the __read end__ of the body is locked.
+The __body__ method must return the __read end__ of the body.
 
 Objects implementing the __Body__ mixin also have an associated consume body algorithm, which given a type, runs these steps:
 
