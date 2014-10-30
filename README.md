@@ -9,7 +9,7 @@ A body is a byte stream, which means it is a piped pair of readable and writable
 
 The __read end__ of a body is the readable stream of the body. It is of type ReadableByteStream.
 
-The __write end__ of a body is the writable stream of the body. It is of type WritableByteStream.
+The __write end__ of a body is the writable stream of the body. It is of type WritableStream.
 
 ## [Body mixin](https://fetch.spec.whatwg.org/#body-mixin)
 
