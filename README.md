@@ -37,7 +37,7 @@ The __bodyUsed__ attribute's getter must return if the __read end__ of the body 
 Objects implementing the __Body__ mixin also have an associated consume body algorithm, which given a type, runs these steps:
 
 1. Let _p_ be a new promise.
-2. Let stream be the _read end_ of the body.
-3. If used flag is set, reject _p_ with a TypeError.
+2. Let _stream_ be the _read end_ of the body.
+3. If _stream_ is locked, reject _p_ with a TypeError.
 4. Otherwise, acquire an exclusive lock of _stream_ and run these substeps in parallel: (the original algorithm follows...)
 
