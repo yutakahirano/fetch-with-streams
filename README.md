@@ -11,19 +11,32 @@ The __read end__ of a body is the readable stream of the body. It is of type Rea
 
 The __write end__ of a body is the writable stream of the body. It is of type WritableStream.
 
+
+## [Request] (https://fetch.spec.whatwg.org/#request-class)
+
+```
+callback BodyStreamWriter = void (WritableStream);
+
+dictionary RequestInit {
+  ByteString method;
+  HeadersInit headers;
+  BodyInit body;
+  BodyStreamWriter bodyWriter;
+  RequestMode mode;
+  RequestCredentials credentials;
+  RequestCache cache;
+};
+```
+
+The `Request(input, init)` constructor must run these steps:
+
+1. (... existing algorithm steps ...)
+2. If _init_'s `bodyWriter` member is present, run these substeps:
+   1. Call `bodyWriter` with _r_'s body's __write end__.
+3. Otherwise, if _init_'s `body` member is present, run these substeps:
+4. (... existing algorithm steps ...)
+
 ## [Body mixin](https://fetch.spec.whatwg.org/#body-mixin)
-
-```
-callback BodyStreamInit = void (WritableStream);
-typedef (Blob or BufferSource or FormData or URLSearchParams or USVString or BodyStreamInit) BodyInit;
-```
-
-To extract a byte stream and a 'Content-Type' value from a BodyStreamInit object, run these steps:
-
-1. Let _stream_ be an empty byte stream.
-2. Let _Content-Type_ be null.
-3. Call _object_ with the _write end_ of the body. Rethrow any exception.
-4. Return _stream_ and _Content-Type_.
 
 ```
 [NoInterfaceObject] interface Body {
@@ -31,7 +44,7 @@ To extract a byte stream and a 'Content-Type' value from a BodyStreamInit object
     ...
 };
 ```
-Objects implementing the Body mixin gain an associated __body__ (a pair of readable and writable byte streams) and a __MIME type__ (initially the empty byte sequence). Objects implments the Body mixin expose methods and attributes of the __read end__ of the body.
+Objects implementing the Body mixin gain an associated __body__ (a pair of readable and writable byte streams) and a __MIME type__ (initially the empty byte sequence). Objects implementing the Body mixin expose methods and attributes of the __read end__ of the body through the __body__ attribute.
 The __bodyUsed__ attribute's getter must return if the __read end__ of the body is locked.
 The __body__ attribute's getter must return the __read end__ of the body.
 
