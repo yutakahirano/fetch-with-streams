@@ -14,9 +14,7 @@ The __write end__ of a body is the writable stream of the body. It is of type Wr
 ## [Body mixin](https://fetch.spec.whatwg.org/#body-mixin)
 
 ```
-dictionary BodyStreamInit {
-    ReadableStream stream;
-};
+callback BodyStreamInit = void (WritableStream);
 typedef (Blob or BufferSource or FormData or URLSearchParams or USVString or BodyStreamInit) BodyInit;
 ```
 
@@ -24,7 +22,7 @@ To extract a byte stream and a 'Content-Type' value from a BodyStreamInit object
 
 1. Let _stream_ be an empty byte stream.
 2. Let _Content-Type_ be null.
-3. Call [[pipeTo]] of object's _stream_ attribute with the __write end__ of the body. Rethrow any exception.
+3. Call _object_ with the _write end_ of the body. Rethrow any exception.
 4. Return _stream_ and _Content-Type_.
 
 ```
