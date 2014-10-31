@@ -15,7 +15,6 @@ The __write end__ of a body is the writable stream of the body. It is of type Wr
 
 ```
 dictionary BodyStreamInit {
-    DOMString contentType;
     ReadableStream stream;
 };
 typedef (Blob or BufferSource or FormData or URLSearchParams or USVString or BodyStreamInit) BodyInit;
@@ -23,8 +22,10 @@ typedef (Blob or BufferSource or FormData or URLSearchParams or USVString or Bod
 
 To extract a byte stream and a 'Content-Type' value from a BodyStreamInit object, run these steps:
 
-1. Call [[pipeTo]] of object's _stream_ attribute with the __write end__ of the body. Rethrow any exception.
-2. Set *Content-Type* to object's _contentType_ attribute.
+1. Let _stream_ be an empty byte stream.
+2. Let _Content-Type_ be null.
+3. Call [[pipeTo]] of object's _stream_ attribute with the __write end__ of the body. Rethrow any exception.
+4. Return _stream_ and _Content-Type_.
 
 ```
 [NoInterfaceObject] interface Body {
