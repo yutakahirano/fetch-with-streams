@@ -35,7 +35,7 @@ Objects implementing the Body mixin gain an associated __body__ (a pair of reada
 The __bodyUsed__ attribute's getter must return if the __read end__ of the body is locked.
 The __body__ attribute's getter must return the __read end__ of the body.
 
-Objects implementing the __Body__ mixin also have an associated consume body algorithm, which given a type, runs these steps:
+Objects implementing the __Body__ mixin also have an associated consume body algorithm, which given a _type_, runs these steps:
 
 1. Let _p_ be a new promise.
 2. Let _stream_ be the _read end_ of the body.
