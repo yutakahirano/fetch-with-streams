@@ -44,3 +44,14 @@ Objects implementing the __Body__ mixin also have an associated consume body alg
 3. If _stream_ is locked, reject _p_ with a TypeError.
 4. Otherwise, acquire an exclusive lock of _stream_ and run these substeps in parallel: (the original algorithm follows...)
 
+## [Request class] (https://fetch.spec.whatwg.org/#body-mixin)
+
+[Request construction algorithm] (https://fetch.spec.whatwg.org/#dom-request) should be modified as follows.
+
+1. Step 19 is modified as follows.
+  - If _r_'s request's mode is _no CORS_, run these substeps:
+    1. If _r_'s request's method is not a simple method, throw a TypeError.
+    2. If _init_'s body member is present and it is of type BodyStreamInit, throw a TypeError.
+    3. Set _r_'s Headers object's guard to _request-no-CORS_.
+2. A new step is added after Step 19.
+  - If _r_'s request's mode is _CORS_, _init_'s body member is present and it is of type BodyStreamInit, set _r_'s request's mode to _CORS-with-forced-preflight_.
