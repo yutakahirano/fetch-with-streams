@@ -4,6 +4,28 @@ Fetch API integrated with Streams
 This document is about the integration of [the Streams API](https://streams.spec.whatwg.org/) with [the Fetch API](https://fetch.spec.whatwg.org/#fetch-api).
 Basically, the integration only adds a way to represent the body data and does not affect the fetch algorithm.
 
+## [Fetch API] (https://fetch.spec.whatwg.org/#fetch-api)
+
+The following should be added in the "Example" section.
+
+```
+If you want to receive the body data progressively, use .body attribute.
+
+function consume(stream, total) {
+  while (stream.state === "readable") {
+    var data = stream.read()
+    total += data.byteLength;
+    console.log("received " + data.byteLength + " bytes (" + total + " bytes in total).")
+  }
+  if (stream.state === "waiting") {
+    return stream.ready.then(() => consume(stream, total))
+  }
+  return stream.closed
+}
+fetch("/music/pk/altes-kamuffel.flac")
+  .then(res => consume(res.body, 0))
+```
+
 ## [Bodies] (https://fetch.spec.whatwg.org/#bodies)
 A body is a byte stream, which means it is a piped pair of readable and writable byte streams. It has an associated ...(the original description follows)
 
