@@ -11,19 +11,21 @@ The following should be added in the "Example" section.
 ```
 If you want to receive the body data progressively, use .body attribute.
 
-function consume(stream, total) {
+function consume(stream, total = 0) {
   while (stream.state === "readable") {
     var data = stream.read()
     total += data.byteLength;
     console.log("received " + data.byteLength + " bytes (" + total + " bytes in total).")
   }
   if (stream.state === "waiting") {
-    return stream.ready.then(() => consume(stream, total))
+    stream.ready.then(() => consume(stream, total))
   }
   return stream.closed
 }
 fetch("/music/pk/altes-kamuffel.flac")
-  .then(res => consume(res.body, 0))
+  .then(res => consume(res.body))
+  .then(() => console.log("consumed the entire body without keeping the whole thing in memory!"))
+  .catch((e) => console.error("something went wrong", e))
 ```
 
 ## [Bodies] (https://fetch.spec.whatwg.org/#bodies)
