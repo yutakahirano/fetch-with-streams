@@ -55,6 +55,8 @@ To construct a fixed ReadableStream with given _bytes_, run these steps.
 
 ## [Fetching](https://fetch.spec.whatwg.org/#fetching)
 
+Add _garbage collection_ as one of fetch termination reasons.
+
 Add the following sentences after "To perform a __fetch__ using _request_, ...".
 
 The user agent may be asked to suspend the ongoing fetch. The user agent may either accept or ignore the suspension request.
@@ -153,3 +155,50 @@ The algorithm is modified as follows.
     1. If _needsMore_ is false, ask the user agent to suspend the ongoing fetch.
   - To process response end-of-file for _response_, call _close_.
 1. Return _p_.
+
+### Fetch termination initiated by the user agent
+
+A ReadableByteStream _s_ is said to be __observable__ when one of the following holds:
+
+- _s_ is reachable from the Garbage Collector.
+- [IsReadableStreamLocked] (https://streams.spec.whatwg.org/#is-readable-stream-locked)(_s_) is __true__.
+
+Let _response_ be the response defined in the [fetch method steps](https://fetch.spec.whatwg.org/#dom-global-fetch). The user agent may terminate the fetch with which _response_ is associated with reason _garbage collection_ if the followings hold:
+
+ - _response_'s type is not _error_.
+ - The associated body of the [Response](https://fetch.spec.whatwg.org/#response_class) object associated to _response_ is not observable.
+
+Note: The intention here is that once the developer acquires a reader for the body stream, they have taken responsibility for resource management into their own hands, and plan to call `reader.cancel()` if they are no longer interested in consuming the body.
+
+(Example)
+
+```
+// The user agent may terminate the fetch because the associated body
+// is not observable.
+fetch("http://www.example.com/")
+
+// The user agent must not terminate the fetch because the associated
+// body is reachable by the garbage collector.
+window.promise = fetch("http://www.example.com/")
+
+// The user agent may terminate the fetch because the associated body
+// is not observable.
+window.promise = fetch("http://www.example.com/").then(res => res.headers)
+
+// The user agent must not terminate the fetch because there is an
+// active reader while it is not reachable by the garbage collector.
+fetch("http://www.example.com/").then(res => res.body.getReader())
+
+// The user agent may terminate the fetch because the reader is not
+// active.
+fetch("http://www.example.com/")
+  .then(res => res.body.getReader().releaseLock())
+
+// The user agent must not terminate the fetch because there is an
+// active reader. Even though the reader is not reachable by the garbage
+// collector, the reader has been used to make termination observable, so
+// if termination occurred on GC, that would make GC observable.
+fetch("http://www.example.com/").then(res => {
+  res.body.getReader().closed.then(() => console.log("stream closed!"))
+})
+```
