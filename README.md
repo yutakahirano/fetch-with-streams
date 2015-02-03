@@ -79,3 +79,53 @@ Objects implementing the __Body__ mixin also have an associated consume body alg
     3. Set _r_'s Headers object's guard to _request-no-CORS_.
 2. A new step is added after Step 19.
   - If _r_'s request's mode is _CORS_, _init_'s body member is present and it is a BodyStreamInit, set _r_'s request's mode to _CORS-with-forced-preflight_.
+
+## [Fetch method](https://fetch.spec.whatwg.org/#fetch-method) ##
+### Communication abort initiated by the user agent ###
+
+A promise _p_ is said to be __observable__ when one of the following meets:
+- _p_ is reacheable from the Garbage Collector.
+- _p_ has any entries in the List that is the value of its [[PromiseFuflillReactions]] internal slot.
+- _p_ has any entries in the List that is the value of its [[PromiseRejectReactions]] internal slot.
+
+A ReadableByteStream _s_ is said to be __observable__ when one of the following meets:
+- _s_ is reacheable from the Garbage Collector.
+- _s_@[[readyPromise]] is _observable_.
+- _s_@[[closedPromise]] is _observable_.
+
+A WritableByteStream _s_ is said to be __observable__ when one of the following meets:
+- _s_ is reacheable from the Garbage Collector.
+- _s_@[[readyPromise]] is _observable_.
+- _s_@[[closedPromise]] is _observable_.
+
+Let _r_ and _response_ be the request and response defined in the [fetch method steps](https://fetch.spec.whatwg.org/#dom-global-fetch). The user agent may abort the ongoing communication if the followings meet:
+
+ - _r_ and _response_ exist.
+ - _response_'s type is not _error_.
+ - The __write end__ of the [Request](https://fetch.spec.whatwg.org/#request_class) object associated to _r_ is not observable.
+ - The __read end__ of the [Response](https://fetch.spec.whatwg.org/#request_class) object associated to _response_ is not observable.
+
+(Example)
+```
+// The user agent may abort the communication because the write end of the
+// request and the read end of the response are not observable.
+fetch("http://www.example.com/")
+
+// The user agent must not abort the communication because the response is
+// reacheable from the garbage collector.
+promise = fetch("http://www.example.com/")
+
+// The user agent may abort the communication because the write end of the
+// request and the read end of the response is not observable.
+promise = fetch("http://www.example.com/").then(res => res.headers)
+
+// The user agent must not abort the communication because res.body.ready
+// is reacheable from the garbage collector.
+promise = fetch("http://www.example.com/").then(res => res.body.ready)
+
+// The user agent must not abort the communication because res.body.ready
+// has a handler.
+fetch("http://www.example.com/")
+  .then(res => res.body.ready)
+  .then(() => {})
+```
