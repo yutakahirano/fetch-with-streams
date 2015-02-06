@@ -49,7 +49,7 @@ To construct a fixed ReadableStream with given _bytes_, run these steps.
 1. Let _enqueue_, _close_ and _error_ be null.
 1. Let _start_ be a function that sets _enqueue_, _close_ and _error_ to the first three arguments when called.
 1. Let _stream_ be the result of constructing a ReadableStream with _start_. Rethrow any exceptions.
-1. Call _enqueue_ with _bytes_. Rethrow any exceptions.
+1. Call _enqueue_ with an ArrayBuffer whose contents are _bytes_. Rethrow any exceptions.
 1. Call _close_. Rethrow any exceptions.
 1. Return _stream_.
 
@@ -70,6 +70,7 @@ The suspended fetch can be resumed.
 ```
 
 Objects implementing the Body mixin gain an associated __readable stream__ (initially null), __used flag__ (initially unset), and a __MIME type__ (initially the empty byte sequence).
+Each [chunk] (https://streams.spec.whatwg.org/#model) in an associated readable stream must be an ArrayBuffer.
 
 The body attribute's getter must return the associated readable stream.
 
@@ -141,8 +142,7 @@ The algorithm is modified as follows.
       1. Set _res_'s readable stream to _stream_.
       1. Resolve _p_ with _res_.
   - To process response body for _response_, run these substeps:
-    1. Let _needsMore_ be the result of calling _enqueue_ with _response_'s body.
-       If that throws an exception, terminate the ongoing fetch algorithm with reason _fatal_ and abort these steps.
+    1. Let _needsMore_ be the result of calling _enqueue_ with an ArrayBuffer whose contents are _response_'s body.
     1. Clear out _response_'s body.
     1. If _needsMore_ is false, ask the user agent to suspend the ongoing fetch.
   - To process response end-of-file for _response_, call _close_.
