@@ -60,6 +60,12 @@ Add the following sentences after "To perform a __fetch__ using _request_, ...".
 The user agent may be asked to suspend the ongoing fetch. The user agent may either accept or ignore the suspension request.
 The suspended fetch can be resumed.
 
+The user agent should ignore the suspension request if the ongoing fetch is updating the response in the HTTP cache for the request.
+
+Note: The user agent must not update the entry in the HTTP cache for a request if request's cache mode is "no-store".
+
+Note: The user agent must not update the entry in the HTTP cache for a request if "Cache-Control: no-cache" HTTP header appears in the response. [RFC7234] (http://tools.ietf.org/html/rfc7234)
+
 ## [Body mixin] (https://fetch.spec.whatwg.org/#body-mixin)
 
 ```
