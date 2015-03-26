@@ -15,19 +15,19 @@ The following should be added in the "Example" section.
 ```
 If you want to receive the body data progressively, use .body attribute.
 
-function consume(stream, total = 0) {
-  while (stream.state === "readable") {
-    var data = stream.read()
-    total += data.byteLength;
-    console.log("received " + data.byteLength + " bytes (" + total + " bytes in total).")
-  }
-  if (stream.state === "waiting") {
-    stream.ready.then(() => consume(stream, total))
-  }
-  return stream.closed
+function consume(reader, total = 0) {
+  return reader.read().then(({done, value}) => {
+    if (done) {
+      return
+    }
+    total += value.byteLength
+    console.log("received " + value.byteLength + " bytes (" + total + " bytes in total).")
+    return consume(reader, total)
+  })
 }
+
 fetch("/music/pk/altes-kamuffel.flac")
-  .then(res => consume(res.body))
+  .then(res => consume(res.body.getReader()))
   .then(() => console.log("consumed the entire body without keeping the whole thing in memory!"))
   .catch((e) => console.error("something went wrong", e))
 ```
