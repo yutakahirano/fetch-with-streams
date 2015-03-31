@@ -48,12 +48,10 @@ __NOTE:__ the Streams Standard does not yet define the `ReadableByteStream` clas
 
 To __construct a fixed ReadableByteStream__ with given _chunks_, run these steps.
 
-1. Let _enqueue_, _close_ and _error_ be null.
-1. Let _start_ be a function that sets _enqueue_, _close_ and _error_ to the first three arguments when called.
-1. Let _stream_ be the result of constructing a ReadableByteStream with _start_. Rethrow any exceptions.
+1. Let _stream_ be the result of constructing a ReadableByteStream. Rethrow any exceptions.
 1. For each _chunk_ in _chunks_, run these substeps:
-  1. Call _enqueue_ with _chunk_. Rethrow any exceptions.
-1. Call _close_. Rethrow any exceptions.
+  1. Call [EnqueueInReadableStream](https://streams.spec.whatwg.org/#enqueue-in-readable-stream)(_stream_, _chunk_). Rethrow any exceptions.
+1. Call [CloseReadableStream](https://streams.spec.whatwg.org/#close-readable-stream)(_stream_). Rethrow any exceptions.
 1. Return _stream_.
 
 An __empty ReadableByteStream__ is the result of constructing a fixed ReadableByteStream with an empty array.
@@ -217,8 +215,6 @@ The algorithm is modified as follows.
 1. Let _p_ be a new promise.
 1. Let _req_ be the result of invoking the initial value of Request as constructor with _input_ and _init_ as arguments. If that threw an exception, reject _p_ with it and return _p_.
 1. Let _request_ be the associated request of _req_.
-1. Let _enqueue_, _close_ and _error_ be null.
-1. Let _start_ be a function that sets _enqueue_, _close_ and _error_ to the first three arguments when called.
 1. Let _strategy_ be a [strategy object] (https://streams.spec.whatwg.org/#queuing-strategy). The user agent may choose any valid strategy object.
 1. Let _stream_ be null.
 1. Run the following in parallel.
@@ -228,17 +224,17 @@ The algorithm is modified as follows.
     1. Let _res_ be a new Response object associated with _response_.
     1. Let _pull_ be a function that resumes the ongoing fetch if it is suspended, when called.
     1. Let _cancel_ be a function that terminates the ongoing fetch algorithm with reason _end-user abort_ when called.
-    1. Let _stream_ be the result of constructing a ReadableByteStream with _start_, _pull_, _cancel_ and _strategy_. If that threw an exception, run the following substeps.
+    1. Let _stream_ be the result of constructing a ReadableByteStream with _pull_, _cancel_ and _strategy_. If that threw an exception, run the following substeps.
       1. Reject _p_ with that exception.
       1. Terminate the ongoing fetch algorithm with reason _fatal_.
     1. Otherwise, run the following substeps.
       1. Set _res_'s readable stream to _stream_.
       1. Resolve _p_ with _res_.
   - To process response body for _response_, run these substeps:
-    1. Let _needsMore_ be the result of calling _enqueue_ with a Uint8Array whose contents are _response_'s body.
+    1. Let _needsMore_ be the result of [EnqueueInReadableStream](https://streams.spec.whatwg.org/#enqueue-in-readable-stream)(_response_'s readable stream, a Uint8Array whose contents are _response_'s body).
     1. Clear out _response_'s body.
     1. If _needsMore_ is false, ask the user agent to suspend the ongoing fetch.
-  - To process response end-of-file for _response_, call _close_.
+  - To process response end-of-file for _response_, call [CloseReadableStream](https://streams.spec.whatwg.org/#close-readable-stream)(_response_'s readable stream).
 1. Return _p_.
 
 ### Fetch termination initiated by the user agent
