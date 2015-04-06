@@ -36,6 +36,8 @@ fetch("/music/pk/altes-kamuffel.flac")
 
 To __construct a ReadableByteStream__ with given _start_, _pull_, _cancel_ and _strategy_ all of which are optional, run these steps.
 
+__NOTE:__ the Streams Standard does not yet define the `ReadableByteStream` class; see [whatwg/streams#300](https://github.com/whatwg/streams/issues/300). However, `ReadableByteStream` will be a superset (in both behavior and API) of the already-defined [`ReadableStream` class](https://streams.spec.whatwg.org/#rs-class). In what follows, we treat `ReadableByteStream` as a `ReadableStream` for now.
+
 1. Let _init_ be a new object.
 1. Set _init_["start"] to _start_ if _start_ is given.
 1. Set _init_["pull"] to _pull_ if _pull_ is given.
