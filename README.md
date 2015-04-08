@@ -34,9 +34,26 @@ fetch("/music/pk/altes-kamuffel.flac")
 
 ## Somewhere in [Infrastructure] (https://fetch.spec.whatwg.org/#infrastructure) section
 
-To __construct a ReadableByteStream__ with given _start_, _pull_, _cancel_ and _strategy_ all of which are optional, run these steps.
+### ReadableByteStream class
+```
+[NoInterfaceObject]
+interface ReadableByteStreamReader {
+  readonly attribute Promise<void> closed;
+  readonly Promise<any> read();
+  void cancel();
+};
 
-__NOTE:__ the Streams Standard does not yet define the `ReadableByteStream` class; see [whatwg/streams#300](https://github.com/whatwg/streams/issues/300). However, `ReadableByteStream` will be a superset (in both behavior and API) of the already-defined [`ReadableStream` class](https://streams.spec.whatwg.org/#rs-class). In what follows, we treat `ReadableByteStream` as a `ReadableStream` for now.
+interface ReadableByteStream {
+  ReadableByteStreamReader getReader();
+  void cancel();
+};
+```
+
+ReadableByteStream and ReadableByteStreamReader are just aliases of ReadableStream and ReadableStreamReader, respectively.
+
+__NOTE:__ the Streams Standard will define these classes in the future, but it does not yet define them; see [whatwg/streams#300](https://github.com/whatwg/streams/issues/300). However, `ReadableByteStream` will be a superset (in both behavior and API) of the already-defined [`ReadableStream` class](https://streams.spec.whatwg.org/#rs-class). In what follows, we treat `ReadableByteStream` as a `ReadableStream` for now.
+
+To __construct a ReadableByteStream__ with given _start_, _pull_, _cancel_ and _strategy_ all of which are optional, run these steps.
 
 1. Let _init_ be a new object.
 1. Set _init_["start"] to _start_ if _start_ is given.
