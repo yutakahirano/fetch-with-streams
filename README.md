@@ -218,7 +218,7 @@ The following item is deleted.
 [clone() method on Response] (https://fetch.spec.whatwg.org/#dom-response-clone) should be modified as follows.
 
 1. If passed flag is set, throw a TypeError.
-1. Let _[out1, out2]_ be the result of teeing (No link yet) the associated readable stream. Rethrow any exceptions.
+1. Let _«out1, out2»_ be the result of invoking [TeeReadableStream] (https://streams.spec.whatwg.org/#tee-readable-stream) with the associated readable stream and __true__. Rethrow any exceptions.
 1. Let _newResponse_ be a copy of response, except that _newResponse_'s body is an empty bytes.
 1. Let _r_ be a new Response object associated with _newResponse_ and a new Headers object whose guard is context object's Headers' guard.
 1. Set the associated readable stream to _out1_.
