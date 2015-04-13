@@ -180,7 +180,7 @@ interface Response {
 };
 ```
 
-A Response object has an associated __readable stream__ (initially an empty ReadableByteStream).
+A Response object has an associated __readable stream__ (initially an empty ReadableByteStream). Each chunk in this stream must be a Uint8Array.
 
 A Response object has an associated __used__ predicate that returns true if one of the following holds:
 
