@@ -256,35 +256,35 @@ The algorithm is modified as follows.
 
 ### Fetch termination initiated by the user agent
 
-The user agent may terminate the ongoing fetch with reason _garbage collection_ if that termination is not observable through the promise which the function returned.
+The user agent may terminate an ongoing fetch with reason _garbage collection_ if that termination is not observable through script.
 
-Note: Although the server to which the fetch is connected can observe the termination, the user agent may terminate the fetch.
+Note: The server observing garbage collection has precedent, e.g. with WebSocket and XMLHttpRequest.
 
 (Example)
 
 ```
-// The user agent may terminate the fetch because the termination cannot
+// The user agent can terminate the fetch because the termination cannot
 // be observed.
 fetch("http://www.example.com/")
 
-// The user agent must note terminate the fetch because the termination can be
+// The user agent cannot terminate the fetch because the termination can be
 // observed through the promise.
 window.promise = fetch("http://www.example.com/")
 
-// The user agent may terminate the fetch because the associated body
+// The user agent can terminate the fetch because the associated body
 // is not observable.
 window.promise = fetch("http://www.example.com/").then(res => res.headers)
 
-// The user agent may terminate the fetch because the termination cannot
+// The user agent can terminate the fetch because the termination cannot
 // be observed.
 fetch("http://www.example.com/").then(res => res.body.getReader().closed)
 
-// The user agent must not terminate the fetch because once can observe the
-// termination by registering a handler to the promise object.
+// The user agent cannot terminate the fetch because one can observe the
+// termination by registering a handler for the promise object.
 window.promise = fetch("http://www.example.com/").then(res =>
   res.body.getReader().closed)
 
-// The user agent must not terminate the fetch termination would be observable
+// The user agent cannot terminate the fetch as termination would be observable
 // via the registered handler.
 fetch("http://www.example.com/").then(res => {
   res.body.getReader().closed.then(() => console.log("stream closed!"))
