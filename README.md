@@ -12,7 +12,7 @@ Replace every "push" word on request / response body with "enqueue".
 
 The following should be added in the "Example" section.
 
-```
+```js
 If you want to receive the body data progressively, use .body attribute.
 
 function consume(reader, total = 0) {
@@ -154,7 +154,7 @@ Request's associated __consume body__ algorithm, which given a _type_, runs thes
 
 ## [Response class] (https://fetch.spec.whatwg.org/#response-class)
 
-```
+```widl
 interface Response {
   ...
   ReadableByteStream body;
@@ -243,7 +243,7 @@ Note: The server observing garbage collection has precedent, e.g. with WebSocket
 
 (Example)
 
-```
+```js
 // The user agent can terminate the fetch because the termination cannot
 // be observed.
 fetch("http://www.example.com/")
