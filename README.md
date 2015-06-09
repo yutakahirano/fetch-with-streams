@@ -34,33 +34,39 @@ fetch("/music/pk/altes-kamuffel.flac")
 
 ## Somewhere in [Infrastructure] (https://fetch.spec.whatwg.org/#infrastructure) section
 
-To __construct a ReadableByteStream__ with given _start_, _pull_, _cancel_ and _strategy_ all of which are optional, run these steps.
+### FetchReadableByteStream ###
+
+FetchReadableByteStream is almost identical with ReadableByteStream, except it has _used_ property that is initially unset and set when locked.
+
+TODO: More detailed definition here.
+
+To __construct a FetchReadableByteStream__ with given _start_, _pull_, _cancel_ and _strategy_ all of which are optional, run these steps.
 
 1. Let _init_ be a new object.
 1. Set _init_["start"] to _start_ if _start_ is given.
 1. Set _init_["pull"] to _pull_ if _pull_ is given.
 1. Set _init_["cancel"] to _cancel_ if _cancel_ is given.
 1. Set _init_["strategy"] to _strategy_ if _strategy_ is given.
-1. Let _stream_ be the result of calling the initial value of ReadableByteStream as constructor with _init_ as an argument. Rethrow any exceptions.
+1. Let _stream_ be the result of calling the initial value of FetchReadableByteStream as constructor with _init_ as an argument. Rethrow any exceptions.
 1. Return _stream_.
 
-To __construct a fixed ReadableByteStream__ with given _chunks_, run these steps.
+To __construct a fixed FetchReadableByteStream__ with given _chunks_, run these steps.
 
-1. Let _stream_ be the result of constructing a ReadableByteStream. Rethrow any exceptions.
+1. Let _stream_ be the result of constructing a FetchReadableByteStream. Rethrow any exceptions.
 1. For each _chunk_ in _chunks_, run these substeps:
   1. Call [EnqueueInReadableStream](https://streams.spec.whatwg.org/#enqueue-in-readable-stream)(_stream_, _chunk_). Rethrow any exceptions.
 1. Call [CloseReadableStream](https://streams.spec.whatwg.org/#close-readable-stream)(_stream_). Rethrow any exceptions.
 1. Return _stream_.
 
-An __empty ReadableByteStream__ is the result of constructing a fixed ReadableByteStream with an empty array.
+An __empty FetchReadableByteStream__ is the result of constructing a fixed FetchReadableByteStream with an empty array.
 
-Note: constructing an empty ReadableByteStream must not throw an exception.
+Note: constructing an empty FetchReadableByteStream must not throw an exception.
 
-A ReadableByteStream _stream_ is said to be __readable__ if _stream_@[[state]] is "readable".
+A FetchReadableByteStream _stream_ is said to be __readable__ if _stream_@[[state]] is "readable".
 
-A ReadableByteStream _stream_ is said to be __closed__ if _stream_@[[state]] is "closed".
+A FetchReadableByteStream _stream_ is said to be __closed__ if _stream_@[[state]] is "closed".
 
-A ReadableByteStream _stream_ is said to be __errored__ if _stream_@[[state]] is "errored".
+A FetchReadableByteStream _stream_ is said to be __errored__ if _stream_@[[state]] is "errored".
 
 ## [Fetching](https://fetch.spec.whatwg.org/#fetching)
 
@@ -79,7 +85,7 @@ Note: The user agent must not update the entry in the HTTP cache for a request i
 
 ## [Body mixin] (https://fetch.spec.whatwg.org/#body-mixin)
 
-Objects implementing the Body mixin gain an associated __passed flag__ (initially unset) and a __MIME type__ (initially the empty byte sequence).
+Objects implementing the Body mixin gain an associated a __MIME type__ (initially the empty byte sequence).
 
 Objects implementing the Body mixin must define an associated __consume body__ operation.
 
@@ -118,61 +124,38 @@ The following item is deleted.
 
 Add the following:
 
-A Request has an associated __locked flag__ (initially unset).
+A Request has an associated __used flag__ (initially unset).
 
-A Request has an associated __used__ predicate that returns true if one of the following holds and false otherwise:
-
-- passed flag is set.
-- locked flag is set.
+A Request has an associated __used__ predicate that returns true if the used flag is set.
 
 Request's associated __consume body__ algorithm, which given a _type_, runs these steps:
 
-1. If passed flag is set or locked flag is set, return a new promise rejected with a TypeError.
-1. Set locked flag.
+1. If used flag is set, return a new promise rejected with a TypeError.
+1. Set used flag.
 1. Let _p_ be a new promise.
 1. Run these substeps in parallel.
   1. Resolve _p_ with the result of running package body data with request body, _type_ and the associated MIME type. If that threw an exception, reject _p_ with that exception.
   1. Clear out request body.
-  1. Unset locked flag.
 1. Return _p_.
-
-[Request construction algorithm] (https://fetch.spec.whatwg.org/#dom-request) should be modified as follows.
-
-1. Step 2 is modified as follows.
-  - If _input_ is a Request object and _input_'s body is non-null, run these substeps:
-    1. If _input_ is used, throw a TypeError.
-    1. [Same]
-1. Step 25 is modified as follows.
-  - If _input_ is a Request object and _input_'s body is non-null, run these substeps:
-    1. [Same]
-    1. Set _input_'s passed flag.
-
-[clone() method on Request] (https://fetch.spec.whatwg.org/#dom-request-clone) should be modified as follows.
-
-1. Step1 is modified as follows.
-  - If passed flag is set or locked flag is set, throw a TypeError.
 
 ## [Response class] (https://fetch.spec.whatwg.org/#response-class)
 
 ```widl
 interface Response {
   ...
-  ReadableByteStream body;
+  FetchReadableByteStream body;
 };
 ```
 
-A Response object has an associated __readable stream__ (initially an empty ReadableByteStream). Each chunk in this stream must be a Uint8Array.
+A Response object has an associated __readable stream__ (initially an empty FetchReadableByteStream). Each chunk in this stream must be a Uint8Array.
 
-A Response object has an associated __used__ predicate that returns true if one of the following holds:
-
-- passed flag is set.
-- The associated readable stream is [locked to a reader](https://streams.spec.whatwg.org/#is-readable-stream-locked).
+A Response object has an associated __used__ predicate that returns true if the associated readable stream's used property is set.
 
 The __body__ attribute's getter must return the associated readable stream.
 
 Response's associated __consume body__ algorithm, which given a _type_, runs these steps:
 
-1. If passed flag is set, return a new promise rejected with a TypeError.
+1. If it is used, return a new promise rejected with a TypeError.
 1. Let _stream_ be the associated readable stream.
 1. Let _reader_ be the result of running [acquiring an exclusive stream reader](https://streams.spec.whatwg.org/#acquire-exclusive-stream-reader) for _stream_. If that threw an exception, return a promise rejected with that exception.
 1. Let _p_ be a new promise.
@@ -193,12 +176,12 @@ The following item is deleted.
 - Step 7 is modified as follow.
   - If _body_ is given, run these substeps:
     1. Let _bytes_ and _Content-Type_ be the result of extracting body.
-    1. Set _r_'s readable stream to the result of constructing a fixed ReadableByteStream with an array consisting of a Uint8Array whose contents are _bytes_. Rethrow any exceptions.
+    1. Set _r_'s readable stream to the result of constructing a fixed FetchReadableByteStream with an array consisting of a Uint8Array whose contents are _bytes_. Rethrow any exceptions.
     1. (same)
 
 [clone() method on Response] (https://fetch.spec.whatwg.org/#dom-response-clone) should be modified as follows.
 
-1. If passed flag is set, throw a TypeError.
+1. If it is used, throw a TypeError.
 1. Let _«out1, out2»_ be the result of invoking [TeeReadableStream] (https://streams.spec.whatwg.org/#tee-readable-stream) with the associated readable stream and __true__. Rethrow any exceptions.
 1. Let _newResponse_ be a copy of response, except that _newResponse_'s body is an empty bytes.
 1. Let _r_ be a new Response object associated with _newResponse_ and a new Headers object whose guard is context object's Headers' guard.
@@ -222,7 +205,7 @@ The algorithm is modified as follows.
     1. Let _res_ be a new Response object associated with _response_.
     1. Let _pull_ be a function that resumes the ongoing fetch if it is suspended, when called.
     1. Let _cancel_ be a function that terminates the ongoing fetch algorithm with reason _end-user abort_ when called.
-    1. Let _stream_ be the result of constructing a ReadableByteStream with _pull_, _cancel_ and _strategy_. If that threw an exception, run the following substeps.
+    1. Let _stream_ be the result of constructing a FetchReadableByteStream with _pull_, _cancel_ and _strategy_. If that threw an exception, run the following substeps.
       1. Reject _p_ with that exception.
       1. Terminate the ongoing fetch algorithm with reason _fatal_.
     1. Otherwise, run the following substeps.
