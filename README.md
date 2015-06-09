@@ -85,7 +85,7 @@ Note: The user agent must not update the entry in the HTTP cache for a request i
 
 ## [Body mixin] (https://fetch.spec.whatwg.org/#body-mixin)
 
-Objects implementing the Body mixin gain an associated __passed flag__ (initially unset) and a __MIME type__ (initially the empty byte sequence).
+Objects implementing the Body mixin gain an associated a __MIME type__ (initially the empty byte sequence).
 
 Objects implementing the Body mixin must define an associated __consume body__ operation.
 
@@ -124,39 +124,19 @@ The following item is deleted.
 
 Add the following:
 
-A Request has an associated __locked flag__ (initially unset).
+A Request has an associated __used flag__ (initially unset).
 
-A Request has an associated __used__ predicate that returns true if one of the following holds and false otherwise:
-
-- passed flag is set.
-- locked flag is set.
+A Request has an associated __used__ predicate that returns true if the used flag is set.
 
 Request's associated __consume body__ algorithm, which given a _type_, runs these steps:
 
-1. If passed flag is set or locked flag is set, return a new promise rejected with a TypeError.
-1. Set locked flag.
+1. If used flag is set, return a new promise rejected with a TypeError.
+1. Set used flag.
 1. Let _p_ be a new promise.
 1. Run these substeps in parallel.
   1. Resolve _p_ with the result of running package body data with request body, _type_ and the associated MIME type. If that threw an exception, reject _p_ with that exception.
   1. Clear out request body.
-  1. Unset locked flag.
 1. Return _p_.
-
-[Request construction algorithm] (https://fetch.spec.whatwg.org/#dom-request) should be modified as follows.
-
-1. Step 2 is modified as follows.
-  - If _input_ is a Request object and _input_'s body is non-null, run these substeps:
-    1. If _input_ is used, throw a TypeError.
-    1. [Same]
-1. Step 25 is modified as follows.
-  - If _input_ is a Request object and _input_'s body is non-null, run these substeps:
-    1. [Same]
-    1. Set _input_'s passed flag.
-
-[clone() method on Request] (https://fetch.spec.whatwg.org/#dom-request-clone) should be modified as follows.
-
-1. Step1 is modified as follows.
-  - If passed flag is set or locked flag is set, throw a TypeError.
 
 ## [Response class] (https://fetch.spec.whatwg.org/#response-class)
 
@@ -169,13 +149,13 @@ interface Response {
 
 A Response object has an associated __readable stream__ (initially an empty FetchReadableByteStream). Each chunk in this stream must be a Uint8Array.
 
-A Response object has an associated __used__ predicate that returns true if the associated readable stream's property is set.
+A Response object has an associated __used__ predicate that returns true if the associated readable stream's used property is set.
 
 The __body__ attribute's getter must return the associated readable stream.
 
 Response's associated __consume body__ algorithm, which given a _type_, runs these steps:
 
-1. If passed flag is set, return a new promise rejected with a TypeError.
+1. If it is used, return a new promise rejected with a TypeError.
 1. Let _stream_ be the associated readable stream.
 1. Let _reader_ be the result of running [acquiring an exclusive stream reader](https://streams.spec.whatwg.org/#acquire-exclusive-stream-reader) for _stream_. If that threw an exception, return a promise rejected with that exception.
 1. Let _p_ be a new promise.
@@ -201,7 +181,7 @@ The following item is deleted.
 
 [clone() method on Response] (https://fetch.spec.whatwg.org/#dom-response-clone) should be modified as follows.
 
-1. If passed flag is set, throw a TypeError.
+1. If it is used, throw a TypeError.
 1. Let _«out1, out2»_ be the result of invoking [TeeReadableStream] (https://streams.spec.whatwg.org/#tee-readable-stream) with the associated readable stream and __true__. Rethrow any exceptions.
 1. Let _newResponse_ be a copy of response, except that _newResponse_'s body is an empty bytes.
 1. Let _r_ be a new Response object associated with _newResponse_ and a new Headers object whose guard is context object's Headers' guard.
