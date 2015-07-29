@@ -159,7 +159,7 @@ interface Response {
 };
 ```
 
-A Response object has an associated __readable stream__ (initially an empty ReadableByteStream). Each chunk in this stream must be a Uint8Array.
+A Response object has an associated __readable stream__ (initially null). Each chunk in this stream must be a Uint8Array.
 
 A Response object has an associated __used__ predicate that returns true if the associated readable stream is not null and the associated readable stream is [disturbed](https://streams.spec.whatwg.org/).
 
@@ -169,6 +169,7 @@ Response's associated __consume body__ algorithm, which given a _type_, runs the
 
 1. If this Response is used, return a new promise rejected with a TypeError.
 1. Let _stream_ be the associated readable stream.
+1. If _stream_ is null, set _stream_ to an empty ReadableByteStream.
 1. Let _reader_ be the result of running [acquiring an exclusive stream reader](https://streams.spec.whatwg.org/#acquire-exclusive-stream-reader) for _stream_. If that threw an exception, return a promise rejected with that exception.
 1. Let _p_ be a new promise.
 1. Run these substeps in parallel.
@@ -194,9 +195,10 @@ The following item is deleted.
 [clone() method on Response] (https://fetch.spec.whatwg.org/#dom-response-clone) should be modified as follows.
 
 1. If this Response is used, throw a TypeError.
-1. Let _«out1, out2»_ be the result of invoking [TeeReadableStream] (https://streams.spec.whatwg.org/#tee-readable-stream) with the associated readable stream and __true__. Rethrow any exceptions.
-1. Let _newResponse_ be a copy of response, except that _newResponse_'s body is an empty bytes.
+1. Let _newResponse_ be a copy of response, except that _newResponse_'s body is null.
 1. Let _r_ be a new Response object associated with _newResponse_ and a new Headers object whose guard is context object's Headers' guard.
+1. If the associated readable stream is null, Return _r_.
+1. Let _«out1, out2»_ be the result of invoking [TeeReadableStream] (https://streams.spec.whatwg.org/#tee-readable-stream) with the associated readable stream and __true__. Rethrow any exceptions.
 1. Set the associated readable stream to _out1_.
 1. Set _r_'s associated readable stream to _out2_.
 1. Return _r_.
@@ -215,6 +217,7 @@ The algorithm is modified as follows.
   - To process response for _response_, run these substeps:
     1. If _response_'s type is error, reject _p_ with a TypeError and abort these steps.
     1. Let _res_ be a new Response object associated with _response_.
+    1. If _response_'s status is a null body status, resolve _p_ with _res_ and abort these steps.
     1. Let _pull_ be a function that resumes the ongoing fetch if it is suspended, when called.
     1. Let _cancel_ be a function that terminates the ongoing fetch algorithm with reason _end-user abort_ when called.
     1. Let _stream_ be the result of constructing a ReadableByteStream with _pull_, _cancel_ and _strategy_. If that threw an exception, run the following substeps.
@@ -227,7 +230,7 @@ The algorithm is modified as follows.
     1. Let _needsMore_ be the result of [EnqueueInReadableStream](https://streams.spec.whatwg.org/#enqueue-in-readable-stream)(_response_'s readable stream, a Uint8Array whose contents are _response_'s body).
     1. Clear out _response_'s body.
     1. If _needsMore_ is false, ask the user agent to suspend the ongoing fetch.
-  - To process response end-of-file for _response_, call [CloseReadableStream](https://streams.spec.whatwg.org/#close-readable-stream)(_response_'s readable stream).
+  - To process response end-of-file for _response_, call [CloseReadableStream](https://streams.spec.whatwg.org/#close-readable-stream)(_response_'s readable stream) if _response_'s readable stream is not null.
 1. Return _p_.
 
 ### Fetch termination initiated by the user agent
