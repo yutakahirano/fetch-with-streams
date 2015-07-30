@@ -34,33 +34,33 @@ fetch("/music/pk/altes-kamuffel.flac")
 
 ## Somewhere in [Infrastructure] (https://fetch.spec.whatwg.org/#infrastructure) section
 
-To __construct a ReadableByteStream__ with given _start_, _pull_, _cancel_ and _strategy_ all of which are optional, run these steps.
+To __construct a ReadableStream__ with given _start_, _pull_, _cancel_ and _strategy_ all of which are optional, run these steps.
 
 1. Let _init_ be a new object.
 1. Set _init_["start"] to _start_ if _start_ is given.
 1. Set _init_["pull"] to _pull_ if _pull_ is given.
 1. Set _init_["cancel"] to _cancel_ if _cancel_ is given.
 1. Set _init_["strategy"] to _strategy_ if _strategy_ is given.
-1. Let _stream_ be the result of calling the initial value of ReadableByteStream as constructor with _init_ as an argument. Rethrow any exceptions.
+1. Let _stream_ be the result of calling the initial value of ReadableStream as constructor with _init_ as an argument. Rethrow any exceptions.
 1. Return _stream_.
 
-To __construct a fixed ReadableByteStream__ with given _chunks_, run these steps.
+To __construct a fixed ReadableStream__ with given _chunks_, run these steps.
 
-1. Let _stream_ be the result of constructing a ReadableByteStream. Rethrow any exceptions.
+1. Let _stream_ be the result of constructing a ReadableStream. Rethrow any exceptions.
 1. For each _chunk_ in _chunks_, run these substeps:
   1. Call [EnqueueInReadableStream](https://streams.spec.whatwg.org/#enqueue-in-readable-stream)(_stream_, _chunk_). Rethrow any exceptions.
 1. Call [CloseReadableStream](https://streams.spec.whatwg.org/#close-readable-stream)(_stream_). Rethrow any exceptions.
 1. Return _stream_.
 
-An __empty ReadableByteStream__ is the result of constructing a fixed ReadableByteStream with an empty array.
+An __empty ReadableStream__ is the result of constructing a fixed ReadableStream with an empty array.
 
-Note: constructing an empty ReadableByteStream must not throw an exception.
+Note: constructing an empty ReadableStream must not throw an exception.
 
-A ReadableByteStream _stream_ is said to be __readable__ if _stream_@[[state]] is "readable".
+A ReadableStream _stream_ is said to be __readable__ if _stream_@[[state]] is "readable".
 
-A ReadableByteStream _stream_ is said to be __closed__ if _stream_@[[state]] is "closed".
+A ReadableStream _stream_ is said to be __closed__ if _stream_@[[state]] is "closed".
 
-A ReadableByteStream _stream_ is said to be __errored__ if _stream_@[[state]] is "errored".
+A ReadableStream _stream_ is said to be __errored__ if _stream_@[[state]] is "errored".
 
 ## [Fetching](https://fetch.spec.whatwg.org/#fetching)
 
@@ -155,11 +155,15 @@ Request's associated __consume body__ algorithm, which given a _type_, runs thes
 ```widl
 interface Response {
   ...
-  ReadableByteStream body;
+  readonly attribute ReadableStream body;
 };
 ```
 
 A Response object has an associated __readable stream__ (initially null). Each chunk in this stream must be a Uint8Array.
+
+The user agent may expose the property as a __ReadableByteStream__.
+
+Note: The type of the associated readable stream is defined as ReadableStream, but it is currently [discussed](https://github.com/whatwg/streams/issues/379). Depending on the discussion, the type may be changed to ReadableByteStream. Hence the type name is not strictly specified at this moment, though the behavior of the property is specified because currently ReadableByteStream has the same methods and properties as ReadableStream.
 
 A Response object has an associated __used__ predicate that returns true if the associated readable stream is not null and the associated readable stream is [disturbed](https://streams.spec.whatwg.org/).
 
@@ -169,7 +173,7 @@ Response's associated __consume body__ algorithm, which given a _type_, runs the
 
 1. If this Response is used, return a new promise rejected with a TypeError.
 1. Let _stream_ be the associated readable stream.
-1. If _stream_ is null, set _stream_ to an empty ReadableByteStream.
+1. If _stream_ is null, set _stream_ to an empty ReadableStream.
 1. Let _reader_ be the result of running [acquiring an exclusive stream reader](https://streams.spec.whatwg.org/#acquire-exclusive-stream-reader) for _stream_. If that threw an exception, return a promise rejected with that exception.
 1. Let _p_ be a new promise.
 1. Run these substeps in parallel.
@@ -189,7 +193,7 @@ The following item is deleted.
 - Step 7 is modified as follow.
   - If _body_ is given, run these substeps:
     1. Let _bytes_ and _Content-Type_ be the result of extracting body.
-    1. Set _r_'s readable stream to the result of constructing a fixed ReadableByteStream with an array consisting of a Uint8Array whose contents are _bytes_. Rethrow any exceptions.
+    1. Set _r_'s readable stream to the result of constructing a fixed ReadableStream with an array consisting of a Uint8Array whose contents are _bytes_. Rethrow any exceptions.
     1. (same)
 
 [clone() method on Response] (https://fetch.spec.whatwg.org/#dom-response-clone) should be modified as follows.
@@ -220,7 +224,7 @@ The algorithm is modified as follows.
     1. If _response_'s status is a null body status, resolve _p_ with _res_ and abort these steps.
     1. Let _pull_ be a function that resumes the ongoing fetch if it is suspended, when called.
     1. Let _cancel_ be a function that terminates the ongoing fetch algorithm with reason _end-user abort_ when called.
-    1. Let _stream_ be the result of constructing a ReadableByteStream with _pull_, _cancel_ and _strategy_. If that threw an exception, run the following substeps.
+    1. Let _stream_ be the result of constructing a ReadableStream with _pull_, _cancel_ and _strategy_. If that threw an exception, run the following substeps.
       1. Reject _p_ with that exception.
       1. Terminate the ongoing fetch algorithm with reason _fatal_.
     1. Otherwise, run the following substeps.
