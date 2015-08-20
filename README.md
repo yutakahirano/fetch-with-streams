@@ -32,14 +32,25 @@ fetch("/music/pk/altes-kamuffel.flac")
   .catch((e) => console.error("something went wrong", e))
 ```
 
-## Somewhere in [Infrastructure] (https://fetch.spec.whatwg.org/#infrastructure) section
+## In [Infrastructure] (https://fetch.spec.whatwg.org/#infrastructure) section
 
-To __construct a ReadableStream__ with given _start_, _pull_, _cancel_ and _strategy_ all of which are optional, run these steps.
+### ReadableStream
+
+A __ReadableStream__ represents a stream of data, as specified in https://streams.spec.whatwg.org. In this section, we define common operations for ReadableStream used in this spec.
+
+To __enqueue__ _data_ into a ReadableStream _stream_, run the following step.
+
+1. Call [EnqueueInReadableStream](https://streams.spec.whatwg.org/#enqueue-in-readable-stream)(_stream_, _data_). Rethrow any exceptions.
+
+To __close__ a ReadableStream _stream_, run the following step.
+
+1. Call [CloseReadableStream](https://streams.spec.whatwg.org/#close-readable-stream)(_stream_). Rethrow any exceptions.
+
+To __construct a ReadableStream__ with given _strategy_, _pull_ action and _cancel_ action, all of which are optional, run these steps.
 
 1. Let _init_ be a new object.
-1. Set _init_["start"] to _start_ if _start_ is given.
-1. Set _init_["pull"] to _pull_ if _pull_ is given.
-1. Set _init_["cancel"] to _cancel_ if _cancel_ is given.
+1. Set _init_["pull"] to a function that runs _pull_.
+1. Set _init_["cancel"] to a function that runs _cancel_.
 1. Set _init_["strategy"] to _strategy_ if _strategy_ is given.
 1. Let _stream_ be the result of calling the initial value of ReadableStream as constructor with _init_ as an argument. Rethrow any exceptions.
 1. Return _stream_.
@@ -47,10 +58,31 @@ To __construct a ReadableStream__ with given _start_, _pull_, _cancel_ and _stra
 To __construct a fixed ReadableStream__ with given _chunks_, run these steps.
 
 1. Let _stream_ be the result of constructing a ReadableStream. Rethrow any exceptions.
-1. For each _chunk_ in _chunks_, run these substeps:
-  1. Call [EnqueueInReadableStream](https://streams.spec.whatwg.org/#enqueue-in-readable-stream)(_stream_, _chunk_). Rethrow any exceptions.
-1. Call [CloseReadableStream](https://streams.spec.whatwg.org/#close-readable-stream)(_stream_). Rethrow any exceptions.
+1. For each _chunk_ in _chunks_, enqueue _chunk_ into _stream_. Rethrow any exceptions.
+1. Close _stream_. Rethrow any exceptions.
 1. Return _stream_.
+
+To __get a reader__ from a ReadableStream _stream_, run these steps.
+
+1. Let _reader_ be the result of calling [AcquireReadableStreamReader](https://streams.spec.whatwg.org/#acquire-readable-stream-reader)(_stream_). Rethrow any exceptions.
+1. Return _reader_.
+
+To __read all bytes from a ReadableStream__ with _reader_, run these steps.
+
+1. Let _promise_ be a new promise.
+1. Let _bytes_ be an empty byte sequence.
+1. Let _read_ be the result of calling [ReadFromReadableStreamReader(_reader_)].
+  1. When _read_ is fulfilled with an object whose `done` property is __false__ and whose `value` property is a Uint8Array, append the `value` property to _bytes_ and run the above step again.
+  1. When _read_ is fulfilled with an object whose `done` property is __true__, resolve _promise_ with _bytes_.
+  1. When _read_ is fulfilled with a value that matches with neither of the above patterns, reject _promise_ with a TypeError.
+  1. When _read_ is rejected with an error, reject _promise_ with that error.
+1. Return _promise_.
+
+Note: because the reader grants exclusive access, the actual mechanism of how to read cannot be observed. Implementations could use more direct mechanism if convenient.
+
+To __tee__ a ReadableStream _stream_, run the following step.
+
+1. Return the result of calling [TeeReadableStream](https://streams.spec.whatwg.org/#tee-readable-stream)(_stream_, __true__). Rethrow any exceptions.
 
 An __empty ReadableStream__ is the result of constructing a fixed ReadableStream with an empty array.
 
@@ -61,6 +93,17 @@ A ReadableStream _stream_ is said to be __readable__ if _stream_@[[state]] is "r
 A ReadableStream _stream_ is said to be __closed__ if _stream_@[[state]] is "closed".
 
 A ReadableStream _stream_ is said to be __errored__ if _stream_@[[state]] is "errored".
+
+A ReadableStream _stream_ is said to be __locked__ if the result of calling [IsReadableStreamLocked](https://streams.spec.whatwg.org/#is-readable-stream-locked)(_stream_) is true.
+
+A ReadableStream _stream_ is said to __need more data__ if the following conditions hold:
+
+ - _stream_ is readable.
+ - The result of calling [GetReadableStreamDesiredSize(_stream_)](https://streams.spec.whatwg.org/#get-readable-stream-desired-size) is positive.
+
+A ReadableStream _stream_ is said to be __disturbed__ if it is disturbed in the sense of https://streams.spec.whatwg.org/.
+
+Note: Be more specific once the Streams spec is ready.
 
 ## [Fetching](https://fetch.spec.whatwg.org/#fetching)
 
@@ -165,7 +208,7 @@ The user agent may expose the property as a __ReadableByteStream__.
 
 Note: The type of the associated readable stream is defined as ReadableStream, but it is currently [discussed](https://github.com/whatwg/streams/issues/379). Depending on the discussion, the type may be changed to ReadableByteStream. Hence the type name is not strictly specified at this moment, though the behavior of the property is specified because currently ReadableByteStream has the same methods and properties as ReadableStream.
 
-A Response object has an associated __used__ predicate that returns true if the associated readable stream is not null and the associated readable stream is [disturbed](https://streams.spec.whatwg.org/).
+A Response object has an associated __used__ predicate that returns true if the associated readable stream is not null and the associated readable stream is disturbed.
 
 The __body__ attribute's getter must return the associated readable stream.
 
@@ -174,14 +217,11 @@ Response's associated __consume body__ algorithm, which given a _type_, runs the
 1. If this Response is used, return a new promise rejected with a TypeError.
 1. Let _stream_ be the associated readable stream.
 1. If _stream_ is null, set _stream_ to an empty ReadableStream.
-1. Let _reader_ be the result of running [acquiring an exclusive stream reader](https://streams.spec.whatwg.org/#acquire-exclusive-stream-reader) for _stream_. If that threw an exception, return a promise rejected with that exception.
+1. Let _reader_ be the result of getting a reader from _stream_. If that threw an exception, return a promise rejected with that exception.
 1. Let _p_ be a new promise.
-1. Run these substeps in parallel.
-  1. Let _chunks_ be the result of using implementation-specific mechanisms to repeatedly read from _stream_, using the exclusive access granted by _reader_, until _stream_ becomes closed or errored.
-  1. Let _bytes_ be the concatenation of each chunk's contents.
-    - Note: Each chunk must be a Uint8Array.
-  1. If _stream_ is errored, reject _p_ with _stream_@[[storedError]].
-  1. Otherwise, resolve _p_ with the result of running package body data with _bytes_, _type_ and the associated MIME type. If that threw an exception, reject _p_ with that exception.
+1. Let _promise_ be the result of reading all bytes from _stream_ with _reader_.
+  1. When _promise_ is fulfilled with _bytes_, resolve _p_ with the result of running package body data with _bytes_, _type_ and the associated MIME type. If that threw an exception, reject _p_ with that exception.
+  1. When _promise_ is rejected with an error, reject _p_ with that error.
 1. Return _p_.
 
 The following item is deleted.
@@ -202,7 +242,7 @@ The following item is deleted.
 1. Let _newResponse_ be a copy of response, except that _newResponse_'s body is null.
 1. Let _r_ be a new Response object associated with _newResponse_ and a new Headers object whose guard is context object's Headers' guard.
 1. If the associated readable stream is null, Return _r_.
-1. Let _«out1, out2»_ be the result of invoking [TeeReadableStream] (https://streams.spec.whatwg.org/#tee-readable-stream) with the associated readable stream and __true__. Rethrow any exceptions.
+1. Let _«out1, out2»_ be the result of teeing _stream_. Rethrow any exceptions.
 1. Set the associated readable stream to _out1_.
 1. Set _r_'s associated readable stream to _out2_.
 1. Return _r_.
@@ -222,19 +262,19 @@ The algorithm is modified as follows.
     1. If _response_'s type is error, reject _p_ with a TypeError and abort these steps.
     1. Let _res_ be a new Response object associated with _response_.
     1. If _response_'s status is a null body status, resolve _p_ with _res_ and abort these steps.
-    1. Let _pull_ be a function that resumes the ongoing fetch if it is suspended, when called.
-    1. Let _cancel_ be a function that terminates the ongoing fetch algorithm with reason _end-user abort_ when called.
-    1. Let _stream_ be the result of constructing a ReadableStream with _pull_, _cancel_ and _strategy_. If that threw an exception, run the following substeps.
+    1. Let _pull_ be an action that resumes the ongoing fetch if it is suspended.
+    1. Let _cancel_ be an action that terminates the ongoing fetch algorithm with reason _end-user abort_.
+    1. Let _stream_ be the result of constructing a ReadableStream with _strategy_, _pull_ and _cancel_. If that threw an exception, run the following substeps.
       1. Reject _p_ with that exception.
       1. Terminate the ongoing fetch algorithm with reason _fatal_.
     1. Otherwise, run the following substeps.
       1. Set _res_'s readable stream to _stream_.
       1. Resolve _p_ with _res_.
   - To process response body for _response_, run these substeps:
-    1. Let _needsMore_ be the result of [EnqueueInReadableStream](https://streams.spec.whatwg.org/#enqueue-in-readable-stream)(_response_'s readable stream, a Uint8Array whose contents are _response_'s body).
+    1. Enqueue a Uint8Array whose contents are _response_'s body into _stream_.
     1. Clear out _response_'s body.
-    1. If _needsMore_ is false, ask the user agent to suspend the ongoing fetch.
-  - To process response end-of-file for _response_, call [CloseReadableStream](https://streams.spec.whatwg.org/#close-readable-stream)(_response_'s readable stream) if _response_'s readable stream is not null.
+    1. If _stream_ doesn't need more data, ask the user agent to suspend the ongoing fetch.
+  - To process response end-of-file for _response_, close _stream_ if _stream_ is not null.
 1. Return _p_.
 
 ### Fetch termination initiated by the user agent
