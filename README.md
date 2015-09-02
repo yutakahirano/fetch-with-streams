@@ -141,7 +141,7 @@ Objects implementing the Body mixin also have an associated __package body data_
     1. If _MIME type_ (ignoring parameters) is \`multipart/form-data\`, run these substeps:
       1. Parse _bytes_, using the value of the \`boundary\` parameter from _MIME type_ and [utf-8] (https://encoding.spec.whatwg.org/#utf-8) as encoding, per the rules set forth in _Returning Values from Forms: multipart/form-data_. [\[RFC2388\]] (https://fetch.spec.whatwg.org/#refsRFC2388)
       1. If that fails for some reason, throw a TypeError.
-      1. Return a new FormData object, running [create an entry] (https://xhr.spec.whatwg.org/#create-an-entry) for each entry as the result of parsing operation and appending it to [entries] (https://xhr.spec.whatwg.org/#concept-formdata-entry).
+      1. Return a new FormData object, appending each entry, resulting from the parsing operation, to [entries] (https://xhr.spec.whatwg.org/#concept-formdata-entry).
       1. (same Note)
     1. Otherwise, if _MIME type_ (ignoring parameters) is \`application/x-www-form-urlencoded\`, run these substeps:
       1. Let _entries_ be the result of [parsing] (https://url.spec.whatwg.org/#concept-urlencoded-parser) _bytes_.
@@ -168,23 +168,22 @@ A Request has an associated __used__ predicate that returns true if either the d
 Request's associated __consume body__ algorithm, which given a _type_, runs these steps:
 
 1. If this Request is used, return a new promise rejected with a TypeError.
-1. If request body is non-null set disturbed flag.
+1. If request's body is non-null set disturbed flag.
 1. Let _p_ be a new promise.
 1. Run these substeps in parallel.
   1. Let _bytes_ be an empty byte sequence.
-  1. If request body is non-null, set _bytes_ to request body.
+  1. If request's body is non-null, set _bytes_ to request body.
   1. Resolve _p_ with the result of running package body data with _bytes_, _type_ and the associated MIME type. If that threw an exception, reject _p_ with that exception.
-  1. Clear out request body.
 1. Return _p_.
 
 [Request construction algorithm] (https://fetch.spec.whatwg.org/#dom-request) should be modified as follows.
 
-1. Step 2 is modified as follows.
-  - If _input_ is a Request object and _input_'s body is non-null, run these substeps:
+1. Step 1 is modified as follows.
+  - If _input_ is a Request object and _input_'s request's body is non-null, run these substeps:
     1. If _input_ is used, throw a TypeError.
     1. [Same]
-1. Step 25 is modified as follows.
-  - If _input_ is a Request object and _input_'s body is non-null, run these substeps:
+1. Step 35 is modified as follows.
+  - If _input_ is a Request object and _input_'s request's body is non-null, run these substeps:
     1. [Same]
     1. Set _input_'s used flag.
 
@@ -232,6 +231,7 @@ The following item is deleted.
 
 - Step 7 is modified as follow.
   - If _body_ is given, run these substeps:
+    1. [Same]
     1. Let _bytes_ and _Content-Type_ be the result of extracting body.
     1. Set _r_'s readable stream to the result of constructing a fixed ReadableStream with an array consisting of a Uint8Array whose contents are _bytes_. Rethrow any exceptions.
     1. (same)
@@ -260,7 +260,7 @@ The algorithm is modified as follows.
   - Fetch _request_.
   - To process response for _response_, run these substeps:
     1. If _response_'s type is error, reject _p_ with a TypeError and abort these steps.
-    1. Let _res_ be a new Response object associated with _response_.
+    1. Let _res_ be a new Response object associated with _response_ and a new Headers object whose guard is "immutable".
     1. If _response_'s status is a null body status, resolve _p_ with _res_ and abort these steps.
     1. Let _pull_ be an action that resumes the ongoing fetch if it is suspended.
     1. Let _cancel_ be an action that terminates the ongoing fetch algorithm with reason _end-user abort_.
