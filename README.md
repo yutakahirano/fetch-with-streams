@@ -15,14 +15,21 @@ The following should be added in the "Example" section.
 ```js
 If you want to receive the body data progressively, use .body attribute.
 
-function consume(reader, total = 0) {
-  return reader.read().then(({done, value}) => {
-    if (done) {
-      return
+function consume(reader) {
+  var total = 0
+  return new Promise((resolve, reject) => {
+    function pump() {
+      reader.read().then({done, value} => {
+        if (done) {
+          resolve()
+          return
+        }
+        total += value.byteLength
+        log("received " + value.byteLength + " bytes (" + total + " bytes in total).")
+        pump()
+      }).catch(reject)
     }
-    total += value.byteLength
-    console.log("received " + value.byteLength + " bytes (" + total + " bytes in total).")
-    return consume(reader, total)
+    pump()
   })
 }
 
