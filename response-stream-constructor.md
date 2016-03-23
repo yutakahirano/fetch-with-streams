@@ -1,5 +1,3 @@
-__ASSUME [body-readable-stream.md](body-readable-stream.md) is applied to [the fetch spec](https://fetch.spec.whatwg.org/).__
-
 ## [Body mixin](https://fetch.spec.whatwg.org/#response-class) ##
 
 To _extract_ a body and a \`Content-Type\` value from _object_, run these steps:
