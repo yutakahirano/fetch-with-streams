@@ -1,7 +1,7 @@
 Streaming upload allows web developers to attach a `ReadableStream` to a `Request`.
 
 ```js
-const rs = ...; // A ReadableStream
+const rs = new ReadableStream({...});
 const resp = await fetch(url, {method: 'POST', body: rs, duplex: 'half'});
 ```
 
