@@ -19,7 +19,7 @@ There are some caveats:
    entire body (even after sending them), and we don't want to store the entire
    body.
  - Only 'cors' and 'same-origin' requests allow streaming upload. You can't use
-   streaming upload with 'navigation' and 'no-cors' requests.
+   streaming upload with 'navigate' and 'no-cors' requests.
  - Cross-origin requests with streaming upload always trigger CORS preflight.
  - This feature cannot be used with HTTP/1.x. If the server doesn't support
    HTTP/2 or HTTP/3, the request fails. This is for some compatibility concerns.
