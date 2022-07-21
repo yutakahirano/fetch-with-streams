@@ -7,7 +7,7 @@ const resp = await fetch(url, {method: 'POST', body: rs, duplex: 'half'});
 
 With this feature, 
 
- - You can upload unbound data to the server. This can't be done with blobs,
+ - You can upload unbounded data to the server. This can't be done with blobs,
    because the size (and the contents) of a blob needs to be set before starting
    sending it.
  - You can control the timing of data generation.
