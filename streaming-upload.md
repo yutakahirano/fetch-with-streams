@@ -21,8 +21,8 @@ With this feature,
    The encoding and compression is done on-the-fly: we don't need to wait for the
    entire body to be encoded and compressed before starting sending.
 
-Without this feature, web developers typically need to do one (or more) for the
-followings:
+Without this feature, web developers typically need to do one (or more) of the
+followings to implement the equivalent:
 
  - Split the stream into multiple chunks and make a fetch for each chunk. This is
    generally bad for performance, and it is difficult to figure out the optimal
