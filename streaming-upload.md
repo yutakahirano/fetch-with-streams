@@ -7,10 +7,36 @@ const resp = await fetch(url, {method: 'POST', body: rs, duplex: 'half'});
 
 With this feature, 
 
- - You can upload unbounded data to the server. This can't be done with blobs,
-   because the size (and the contents) of a blob needs to be set before starting
-   sending it.
- - You can control the timing of data generation.
+ - Web developer can upload unbounded data to the server. This can't be done with
+   blobs, because the size (and the contents) of a blob needs to be set before
+   starting sending it.
+ - Web developers can implement streaming processing easily. Let's assume we have
+   a large ReadableStream consisting of Strings (`rs`) and a TransformStream
+   (`deflater`) for an awesome compression algorithm - we can make a fetch with the
+   compressed stream, like this:
+   ```js
+   const body = rs.pipeThrough(new TextEncodingStream()).pipeThrough(`deflater`);
+   const resp = await fetch(url, {method: 'POST', body, duplex: 'half'});
+   ```
+   The encoding and compression is done on-the-fly: we don't need to wait for the
+   entire body to be encoded and compressed before starting sending.
+
+Without this feature, web developers typically need to do one (or more) for the
+followings:
+
+ - Split the stream into multiple chunks and make a fetch for each chunk. This is
+   generally bad for performance, and it is difficult to figure out the optimal
+   size of each chunk. This also requires additional logic and error handling on
+   both of client and server sides.
+ - Construct a blob (or ArrayBuffer) to be sent before making a fetch. This will
+   impact the latency and peek memory usage heavily.
+ - Use protocols such as WebSocket and WebTransport over HTTP/3. The server needs
+   to understand these protocols if we choose this option.
+
+These performance shortcomings and cost of additional logic will impact end-users.
+In other words, this feature will help end-users enjoy web applications with better
+performance, more reliability and less cost.
+    
  
 There are some caveats:
 
