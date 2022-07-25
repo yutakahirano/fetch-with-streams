@@ -15,7 +15,7 @@ With this feature,
    (`deflater`) for an awesome compression algorithm - we can make a fetch with the
    compressed stream, like this:
    ```js
-   const body = rs.pipeThrough(new TextEncodingStream()).pipeThrough(`deflater`);
+   const body = rs.pipeThrough(new TextEncodingStream()).pipeThrough(deflater);
    const resp = await fetch(url, {method: 'POST', body, duplex: 'half'});
    ```
    The encoding and compression is done on-the-fly: we don't need to wait for the
