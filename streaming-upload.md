@@ -7,7 +7,7 @@ const resp = await fetch(url, {method: 'POST', body: rs, duplex: 'half'});
 
 With this feature, 
 
- - Web developer can upload unbounded data to the server. This can't be done with
+ - Web developers can upload unbounded data to the server. This can't be done with
    blobs, because the size (and the contents) of a blob needs to be set before
    starting sending it.
  - Web developers can implement streaming processing easily. Let's assume we have
